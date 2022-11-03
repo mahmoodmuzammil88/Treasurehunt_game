@@ -44,7 +44,7 @@
   <body>
     <center>
       <div>
-        <h1>Treasure Game</h1>
+        <h1>Treasure Hunt Game</h1>
         <h1>Welcome <span id="player-name"></span></h1>
         <h1>Attempts : <span id="attempts"></span></h1>
       </div>
@@ -54,8 +54,9 @@
     </center>
   </body>
   <script>
-    if(!localStorage.getItem("winners")){
-      localStorage.setItem("winners",JSON.stringify([]))
+    if(!localStorage.getItem("winner")){
+      localStorage.setItem("winner",JSON.stringify([]))
+      console.log(localStorage.getItem("winner"));  
     }
     let attempt = 0;
     const empty = new Audio("back.mp3")
@@ -113,9 +114,31 @@
             let clickedNumber = event.target.id;
             console.log(clickedNumber);
             if (clickedNumber == 1) {
+              //Play winning Sound
               winner.play();
-              alert("You are a Winner, Congratulations!!!!");
-              location.reload("/");
+              //Winner Data
+              let winnerData = { playerName: username, attempts: attempt + 1 };
+              //Get from Local Storage
+              let winners = JSON.parse(localStorage.getItem("winner"));
+              //Flat it
+              winners = winners.flat();
+              //Push the new Winners
+              winners.push(winnerData);
+              //Call Ranking Function
+              winners = ranking(winners);
+
+              //Set New Winner Data in Local Storage
+              localStorage.setItem("winner", JSON.stringify(winners));
+              // location.reload("/leaderboard.html");
+
+              //Show Alert
+              alert(
+                `You are a Winner, Congratulations!!!! You took ${
+                  attempt + 1
+                } Attempt to Win.`
+              );
+              //Redirect to Leaderboard
+              location.replace("./leaderboard.html");
             } else if (primesArray.includes(+clickedNumber)) {
             loser.play();
               alert("You are Loser! Better Luck Next Time");
@@ -133,6 +156,7 @@
                 }
               }
               attempt++;
+              audio.play();
             }
             document.getElementById("attempts").innerText = attempt;
           });
@@ -151,5 +175,31 @@
 
     //Invoke the Function
     main();
+    
+    function ranking(winnerData) {
+      //New Winners
+      let newWinners = [];
+      //Array to store Elements with Same attempts
+      let temp = [];
+      // //Convert 2D to 1D
+      // winnerData = winnerData.flat();
+      //Sort by Number of Attempts
+      winnerData.sort((a, b) => a.attempts - b.attempts);
+      //Give/Initialise Rank 1
+      temp[0] = winnerData[0];
+
+      //Loop to Handle 2 Winners with Same number of Attempts
+      for (let i = 1; i < winnerData.length; i++) {
+        if (winnerData[i].attempts == winnerData[i - 1].attempts) {
+          temp.push(winnerData[i]);
+        } else {
+          newWinners.push(temp);
+          temp = [];
+          temp.push(winnerData[i]);
+        }
+      }
+      newWinners.push(temp);
+      return newWinners;
+    }
   </script>
 </html>
